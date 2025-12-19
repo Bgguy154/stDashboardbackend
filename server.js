@@ -51,16 +51,20 @@ const Course = mongoose.models.Course || mongoose.model("Course", CourseSchema);
 // =====================
 // DATABASE CONNECTION
 // =====================
+// Optimized for Serverless
+let isConnected = false; 
+
 async function connectDB() {
-  if (mongoose.connection.readyState >= 1) return;
-  
+  if (isConnected) return;
+
   try {
-    // ✅ Modern Mongoose connection (simple)
-await mongoose.connect(process.env.MONGODB_URI);
-    console.log("✅ MongoDB connected successfully");
+    const db = await mongoose.connect(process.env.MONGODB_URI);
+    isConnected = db.connections[0].readyState;
+    console.log("✅ MongoDB connected");
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error);
-    process.exit(1);
+    // Don't use process.exit(1) in serverless; just throw the error
+    throw error;
   }
 }
 
